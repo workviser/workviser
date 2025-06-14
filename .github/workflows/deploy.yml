@@ -2,46 +2,28 @@ name: Deploy FastAPI to EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup SSH access
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Deploy FastAPI
-      run: |
-        ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          # Clone if doesn't exist
-          if [ ! -d "~/my-fastapi-app" ]; then
-            git clone https://github.com/workviser/workviser.git ~/my-fastapi-app
-          fi
-
-          cd ~/my-fastapi-app
-          git pull origin main
-
-          # Setup virtualenv if not already done
-          if [ ! -d "venv" ]; then
-            python3 -m venv venv
-          fi
-
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
-          # Kill existing Uvicorn process
-          pkill -f "uvicorn" || true
-
-          # Run Uvicorn in background
-          nohup venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
-        EOF
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e  # exit on error
+            cd /home/ubuntu/workviser
+            git pull --ff-only origin main
+            source /home/ubuntu/workviser/venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            sudo systemctl restart workviser.service
