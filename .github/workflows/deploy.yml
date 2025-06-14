@@ -2,30 +2,28 @@ name: Deploy FastAPI to EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
-        chmod 600 ~/.ssh/ec2_key.pem
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Deploy via SSH
-      run: |
-        ssh -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          cd /home/ubuntu/workviser
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd ~/workviser
           git pull origin main
           source venv/bin/activate
           pip install -r requirements.txt
-          sudo systemctl restart workviser
-        EOF
+          sudo systemctl restart workviser.service
+
 
