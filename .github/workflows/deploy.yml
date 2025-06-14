@@ -27,8 +27,15 @@ jobs:
         echo "✅ SSH key debug complete."
 
     - name: Deploy FastAPI
+      env:
+        EC2_USER: ${{ secrets.EC2_USER }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
       run: |
-        ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+        echo "Running SSH command to EC2..."
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" << 'EOF'
+          set -e  # Exit on error for better debug
+          echo "🌀 Connected to EC2 instance"
+
           # Clone if doesn't exist
           if [ ! -d "~/my-fastapi-app" ]; then
             git clone https://github.com/workviser/workviser.git ~/my-fastapi-app
@@ -51,5 +58,6 @@ jobs:
 
           # Run Uvicorn in background
           nohup venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
-        EOF
 
+          echo "✅ Deployment complete"
+        EOF
