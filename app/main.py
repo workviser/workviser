@@ -17,7 +17,7 @@ app.include_router(manager_router, prefix="/manager", tags=["Manager"])
 @app.get("/health")
 async def root():
     print("Server is running really fine")
-    return {"message": "server is running"}
+    return {"message": "server is running fine"}
 
 
 if __name__ == "__main__":
