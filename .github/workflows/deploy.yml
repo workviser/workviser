@@ -9,60 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-    - name: Setup SSH access
+    - name: Set up SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+        chmod 600 ~/.ssh/ec2_key.pem
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Debug SSH Key
+    - name: Deploy via SSH
       run: |
-        echo "🔍 Checking SSH key..."
-        ls -l ~/.ssh
-        echo "✅ SSH key setup complete."
-
-    - name: Debug Environment Variables
-      run: |
-        echo "🧪 EC2_USER: ${{ secrets.EC2_USER }}"
-        echo "🧪 EC2_HOST: ${{ secrets.EC2_HOST }}"
-        # Do not print private key for security
-
-    - name: Deploy FastAPI
-      env:
-        EC2_USER: ${{ secrets.EC2_USER }}
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "🚀 Running SSH to $EC2_USER@$EC2_HOST"
-        
-        if [ -z "$EC2_USER" ] || [ -z "$EC2_HOST" ]; then
-          echo "❌ EC2_USER or EC2_HOST is not set."
-          exit 1
-        fi
-
-        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" << 'EOF'
-          set -e
-          echo "🌀 Connected to EC2"
-
-          if [ ! -d "~/my-fastapi-app" ]; then
-            git clone https://github.com/workviser/workviser.git ~/my-fastapi-app
-          fi
-
-          cd ~/my-fastapi-app
+        ssh -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/my-fastapi-app
           git pull origin main
-
-          if [ ! -d "venv" ]; then
-            python3 -m venv venv
-          fi
-
           source venv/bin/activate
-          pip install --upgrade pip
           pip install -r requirements.txt
-
-          pkill -f "uvicorn" || true
-          nohup venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
-          echo "✅ FastAPI deployed and running."
+          sudo systemctl restart my-fastapi-app
         EOF
+
