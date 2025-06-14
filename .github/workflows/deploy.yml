@@ -17,26 +17,36 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
     - name: Debug SSH Key
       run: |
-        echo "🔍 Checking SSH key details..."
-        file ~/.ssh/id_rsa
-        ls -la ~/.ssh
-        echo "✅ SSH key debug complete."
+        echo "🔍 Checking SSH key..."
+        ls -l ~/.ssh
+        echo "✅ SSH key setup complete."
+
+    - name: Debug Environment Variables
+      run: |
+        echo "🧪 EC2_USER: ${{ secrets.EC2_USER }}"
+        echo "🧪 EC2_HOST: ${{ secrets.EC2_HOST }}"
+        # Do not print private key for security
 
     - name: Deploy FastAPI
       env:
         EC2_USER: ${{ secrets.EC2_USER }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
       run: |
-        echo "Running SSH command to EC2..."
-        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" << 'EOF'
-          set -e  # Exit on error for better debug
-          echo "🌀 Connected to EC2 instance"
+        echo "🚀 Running SSH to $EC2_USER@$EC2_HOST"
+        
+        if [ -z "$EC2_USER" ] || [ -z "$EC2_HOST" ]; then
+          echo "❌ EC2_USER or EC2_HOST is not set."
+          exit 1
+        fi
 
-          # Clone if doesn't exist
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" << 'EOF'
+          set -e
+          echo "🌀 Connected to EC2"
+
           if [ ! -d "~/my-fastapi-app" ]; then
             git clone https://github.com/workviser/workviser.git ~/my-fastapi-app
           fi
@@ -44,7 +54,6 @@ jobs:
           cd ~/my-fastapi-app
           git pull origin main
 
-          # Setup virtualenv if not already done
           if [ ! -d "venv" ]; then
             python3 -m venv venv
           fi
@@ -53,11 +62,7 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-          # Kill existing Uvicorn process
           pkill -f "uvicorn" || true
-
-          # Run Uvicorn in background
           nohup venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
-
-          echo "✅ Deployment complete"
+          echo "✅ FastAPI deployed and running."
         EOF
