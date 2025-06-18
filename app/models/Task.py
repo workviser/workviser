@@ -21,6 +21,8 @@ class Task(BaseModel):
     duration: timedelta
     image_url: Optional[str] = None
     document_url: Optional[str] = None
+    
+    # the task status should be in the vectors beacuse it can be compleleted ot reusmed pasued or suspended it should not be bool
     status: bool = False
     priority: PriorityLevel
     requirements: Optional[List[str]] = None
@@ -30,7 +32,7 @@ class Task(BaseModel):
     employee_id: str
     project_id: str
     
-    Accepted_status: bool = False
+    accepted_status: bool = False
     reject_reason:Optional[str]
 
     created_at: datetime = Field(default_factory=datetime.now)

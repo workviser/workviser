@@ -32,7 +32,7 @@ def mental_status_analyzer(convo_history,taskdetails):
             {
                 "role": "user",
                 # here are the deftalt str did beacuse it was giving time zone error . need to study later  Date : 18/6/2025 
-                "content": f"Task Details: {taskdetails}\n\nReal/Current Conversation: {json.dumps(convo_history, indent=2 ,default=str)}"
+                "content": f"Task Details: {taskdetails}\n\nReal/Current Conversation: {json.dumps(convo_history, indent=2 ,default=str)}",
             }
         ],
         model="llama3-70b-8192",
