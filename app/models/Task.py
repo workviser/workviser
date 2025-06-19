@@ -22,8 +22,10 @@ class Task(BaseModel):
     image_url: Optional[str] = None
     document_url: Optional[str] = None
     
-    # the task status should be in the vectors beacuse it can be compleleted ot reusmed pasued or suspended it should not be bool
-    status: bool = False
+   #this is regarding whether task is completed or not
+    completed_status: bool = False
+    #This field regarding the actual status of task
+    descriptive_task_status=Optional[str]=""
     priority: PriorityLevel
     requirements: Optional[List[str]] = None
 
