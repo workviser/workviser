@@ -107,7 +107,7 @@ async def create_empty_conversation(task, employee_id: str, task_id: str):
         "manager_message": None,
         "workviser_message": "What is Task Status?",
         "task_Conversation_history": [],
-        "status": EmployeeStatus.Trying.value,
+        "status": "",
         "task_status": False
     })
 
@@ -132,7 +132,8 @@ async def complete_task(task_id: str, completion_status: bool = True, notes: str
 
     # 2. Update task status and completion time
     updates = {
-        "status": completion_status,
+        "task_status": completion_status,
+        "descriptive_task_status"="Completed",
         "completed_at": datetime.now(),
         "notes": notes
     }
