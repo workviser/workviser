@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+
+venv/
+env/
+ENV/
+.venv/
+.env
+# Environment variables
+
+
+# VS Code settings
+.vscode/
+
+# Logs and analysis outputs
+*.log
+*.txt
+*.json
+
+# Image folders (optional, comment out if you want to keep them in Git)
+images/
+screenshots/
+
+# OS files
+.DS_Store
+Thumbs.db
