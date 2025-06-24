@@ -61,14 +61,14 @@ async def acceptresponse(
     return await addconversation(taskid,employeeid,useresponse)
 
 
-#Needassistance route updated bY Nawaz Sayyad Date : 24/6/2025
-@router.post("/needassistance")
-async def needassistance(
-    taskid :str=Body(...),
-    employeeid :str=Body(...),
-    capturedImagesList :str=Body(...),
-):
-    return await #function to be called here (calling function here resolve this eror ->)
+#Needassistance route updated bY Nawaz Sayyad Date : 24/6/2025 (uncomment while updtating)
+# @router.post("/needassistance")
+# async def needassistance(
+#     taskid :str=Body(...),
+#     employeeid :str=Body(...),
+#     capturedImagesList :str=Body(...),
+# ):
+#     return await #function to be called here (calling function here resolve this eror ->)
 
 class TaskCompletionRequest(BaseModel):
     completion_status: bool = True
