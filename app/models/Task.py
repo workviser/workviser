@@ -24,8 +24,9 @@ class Task(BaseModel):
     
    #this is regarding whether task is completed or not
     completed_status: bool = False
-    #This field regarding the actual status of task
-    descriptive_task_status=Optional[str]=""
+    #This field regarding the actual status of task changed to :
+    # changed to : By nawaz 24/6/2025 
+    descriptive_task_status:  Optional[str] =""
     priority: PriorityLevel
     requirements: Optional[List[str]] = None
 

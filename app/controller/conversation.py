@@ -60,7 +60,7 @@ async def addconversation(taskid: str,employeeid:str, response: str):
         }
     )
 
-    return {"status": "success", "message": "Response added with updated mental status"}
+    return {"status": "success", "message": "Response added with updated mental status","mental_status":updated_status}
 
 print(datetime.now(timezone.utc).isoformat())
 

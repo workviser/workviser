@@ -133,7 +133,7 @@ async def complete_task(task_id: str, completion_status: bool = True, notes: str
     # 2. Update task status and completion time
     updates = {
         "task_status": completion_status,
-        "descriptive_task_status"="Completed",
+        "descriptive_task_status":"Completed",
         "completed_at": datetime.now(),
         "notes": notes
     }
