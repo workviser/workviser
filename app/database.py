@@ -8,7 +8,8 @@ load_dotenv()
 
 MONGO_URI = "mongodb+srv://workviseraws:0NXOubYehEVjby4x@cluster0.oi0xh0i.mongodb.net/"
 print("The Format is "+ MONGO_URI)
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+# changed
+DATABASE_NAME = os.getenv("DATABASE_NAME","WorkviserDB")
 
 # MongoDB client setup
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
