@@ -140,6 +140,18 @@ async def assign_task_from_webhook(request: Request):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+
+@router.post("/webhook/assigntask")
+async def assign_task_from_webhook(request: Request):
+    try:
+        payload = await request.json()
+        print("Payload:", payload)
+        return {"status": "OK"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
 # @router.put("/update_task/{task_id}")
 
 # @router.delete("/delete_task/{task_id}")
