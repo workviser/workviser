@@ -37,6 +37,7 @@ from app.controller.employee_controller import accept_reject_taskcontroller
 from app.controller.employee_controller import complete_task
 from app.controller.conversation import addconversation
 from app.controller.employee_controller import get_task_notification
+from app.controller.needassistance import starting_grant_assistant_employee
 router = APIRouter()
 
 
@@ -68,10 +69,12 @@ async def acceptresponse(
 # Coded By Nawaz Sayyad for Need assistance Date : 29/6/2025 Time : 12:49pm
 @router.post("/needassistance")
 async def needassistance(
+    
     employeeId: str = Body(...),
     taskId: str = Body(...),
     screenshots: List[str] = Body(...)
 ):
+    print("Employee Just hit the Needassistance")
     decoded_images = []
     debug_logs = []
 
@@ -88,10 +91,10 @@ async def needassistance(
             decoded_images.append(image)
 
             # # Save for debugging // uncomment following 3 lines to save images
-            filename = f"screenshot_{taskId}_{index}.png"
-            image.save(filename)
-            debug_logs.append(f"Image {index}: saved as {filename}")
-
+            # filename = f"screenshot_{taskId}_{index}.png"
+            # image.save(filename)
+            # debug_logs.append(f"Image {index}: saved as {filename}")
+            
         except Exception as e:
             debug_logs.append(f"Image {index}: decoding error: {str(e)}")
             return {
@@ -99,12 +102,15 @@ async def needassistance(
                 "message": f"Error decoding image {index}: {str(e)}",
                 "debug": debug_logs
             }
-
+    # end of extracting the images
+        
+    # sending the images and task details to the main processing 
+    
 
     # following details may vary , we can send the details of the helper employee ormay be a google meet link where the helper employee can join
     return {
         "status": "success",
-        "message": f"{len(decoded_images)} images received and processed.",
+        "message": await starting_grant_assistant_employee(employeeid=employeeId,taskid=taskId,decoded_images=decoded_images),
         "taskId": taskId,
         "employeeId": employeeId,
         "debug": debug_logs  # ✅ helpful for inspection

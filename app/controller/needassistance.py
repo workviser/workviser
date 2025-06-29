@@ -1,3 +1,4 @@
+from app.wwapicall.ssprocessor import process_task
 async def starting_grant_assistant_employee(taskid:str ,employeeid:str,decoded_images:list ):
     """
     1.In this function we will be calling the vision analysis model by passing the employeeid and taskid to and the list of the decoded images i.e screenshots.
@@ -8,4 +9,6 @@ async def starting_grant_assistant_employee(taskid:str ,employeeid:str,decoded_i
     5.Prepare the New Helping task Details : ex. Whome to help ? what to do? what previously done? the screenhots.
     6.Now assign the Task and also Send the Email.
     """
-    
+    print("Enetered in the Needassistance.py")
+    extracted_json =await  process_task(task_id=taskid,image_paths=decoded_images)
+    print("The JSON after Processing is the screenshot is "+str(extracted_json))
