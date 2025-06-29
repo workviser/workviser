@@ -69,24 +69,24 @@ async def assign_task_from_webhook(request: Request):
     try:
         payload = await request.json()
 
-        manager_id = payload.get("manager_id")
-        employee_id = payload.get("employee_id")
+        manager_name = payload.get("manager_name")
+        employee_name = payload.get("employee_name")
         task_data = payload.get("task")
 
-        if not (manager_id and employee_id and task_data):
+        if not (manager_name and employee_name and task_data):
             raise HTTPException(status_code=400, detail="Missing required fields")
 
-     
-        manager = await manager_collection.find_one({"id": manager_id})
+        # Find manager and employee by name
+        manager = await manager_collection.find_one({"name": manager_name})
         if not manager:
             raise HTTPException(status_code=404, detail="Manager not found")
 
-        employee = await employee_collection.find_one({"id": employee_id})
+        employee = await employee_collection.find_one({"name": employee_name})
         if not employee:
             raise HTTPException(status_code=404, detail="Employee not found")
 
         if not employee.get("fcm_token"):
-            raise HTTPException(status_code=400, detail=f"Employee {employee_id} has no FCM token registered")
+            raise HTTPException(status_code=400, detail=f"Employee {employee_name} has no FCM token registered")
 
         # Flatten and clean task data
         if "image_url" in task_data:
@@ -105,8 +105,8 @@ async def assign_task_from_webhook(request: Request):
         task_document = {
             **task_data,
             "id": str(uuid4()),
-            "manager_id": manager_id,
-            "employee_id": employee_id,
+            "manager_id": manager["id"],
+            "employee_id": employee["id"],
             "status": False,
             "Accepted_status": False,
             "created_at": datetime.now().isoformat()
@@ -124,8 +124,7 @@ async def assign_task_from_webhook(request: Request):
     except HTTPException:
         raise
     except Exception as e:
-       
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 # @router.put("/update_task/{task_id}")
 
 # @router.delete("/delete_task/{task_id}")
