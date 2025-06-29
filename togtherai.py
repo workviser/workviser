@@ -1,44 +1,52 @@
 import os
+import json
+import base64
+from PIL import Image
 from dotenv import load_dotenv
 from together import Together
-from PIL import Image
-import base64
-import json
+import asyncio
+from motor.motor_asyncio import AsyncIOMotorClient
 
-# Load environment variables from .env file
+
+# Load env and setup
 load_dotenv()
 client = Together(api_key=os.getenv("TOGETHER_API_KEY"))
+DATABASE_NAME = os.getenv("DATABASE_NAME", "workviser")
+
+# MongoDB
+mongo_client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+db = mongo_client[DATABASE_NAME]
+task_collection = db["Task"]
+
+
 
 # Enhanced base prompt
 base_prompt = """
 Look at this screenshot of a developer's screen and describe what is happening. Be detailed and explain everything visible, including UI, code, error messages, and data.
 
-**WHAT IS HAPPENING:**
+*WHAT IS HAPPENING:*
 1. What is the developer currently doing?
 2. Which tools or files are visible (filenames, editors)?
 3. What browser tabs or applications are open?
 4. Is there a terminal or command prompt visible? If yes, analyze its output in deeply technical context.
 
-**IF AND ONLY IF THERE ARE VISIBLE ERRORS:**
+*IF AND ONLY IF THERE ARE VISIBLE ERRORS:*
 5. What is the exact error message you see?
 6. What is causing this specific error?
-7. How to fix it? Give 3 different solutions:
-   - Solution 1: [most likely fix]
-   - Solution 2: [alternative fix]
-   - Solution 3: [fallback fix]
+
 8. Which technical domain does the error belong to (Python, Node.js, React, etc.)?
 9. Step-by-step: How would a developer fix this?
 
-**IF THERE ARE GRAPHS OR STATISTICS:**
+*IF THERE ARE GRAPHS OR STATISTICS:*
 10. If any charts, plots, or statistical graphs are visible, explain:
    - What type of graph is shown?
    - What does it represent?
    - What insight can be derived?
 
-**HELP NEEDED:**
+*HELP NEEDED:*
 11. What kind of developer could help? (Frontend, Backend, Data Scientist, DevOps, etc.)
 
-**RULES:**
+*RULES:*
 - Only describe errors if they are explicitly visible (red text, tracebacks, etc.)
 - If no error: say “No visible errors.”
 - Write in complete paragraphs, not short bullet points.
@@ -50,12 +58,13 @@ def encode_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode("utf-8")
 
+
 # Analyze a single image using vision model
 def analyze_image(image_path):
     image_data = encode_image(image_path)
 
     response = client.chat.completions.create(
-        model="meta-llama/Llama-Vision-Free",  # ✅ Correct model
+        model="meta-llama/Llama-Vision-Free",
         messages=[
             {
                 "role": "system",
@@ -86,25 +95,46 @@ def analyze_image(image_path):
 
     content = response.choices[0].message.content.strip()
 
-    # Save individual image analysis
-    img_name = os.path.basename(image_path).split('.')[0]
-    with open(f"analysis_{img_name}.txt", "w") as f:
-        f.write(content)
-
     return {
         "image": image_path,
         "analysis": content
     }
 
-# Build summarization prompt from all per-image outputs
-def build_summarization_prompt(image_analyses):
-    prompt = """You are an AI assistant. Based on the following step-by-step analysis of screenshots, summarize:
 
-1. What is the developer trying to accomplish overall?
-2. If there are errors: What issues or errors did they face?
-3. What is the likely cause of those errors?
-4. Which type of developer can help (Backend, Python, etc.)?
-5. What next step should they take?
+
+def get_task_description_sync(task_id):
+    async def fetch():
+        print("🔍 Fetching task with ID:", task_id)
+        task = await task_collection.find_one({"id": task_id})
+        if task:
+            description = task.get("description", "No task description provided")
+            
+            return description
+        else:
+            print("❌ No task found.")
+            return "No task found."
+    
+    return asyncio.run(fetch())
+
+
+
+    
+
+
+# Build summarization prompt from all per-image outputs and task description
+def build_summarization_prompt(image_analyses, task_description):
+
+    prompt = f"""You are an AI assistant. A developer is working on the following task:
+
+**Task Description:** {task_description}
+
+Based on the following step-by-step analysis of screenshots and keeping the Task Description in mind, summarize:
+
+1. provide brief information about task description
+2. What is the developer trying to accomplish overall?
+3. If there are errors: What issues or errors did they face?
+4. What is the likely cause of those errors?
+5. Which type of developer can help (Backend, Python, etc.)?
 6. If there is no error but the if and only if thers an image contains graphs/statistical content, give a brief explanation of the data.
 
 Step-by-step analysis:\n\n"""
@@ -116,36 +146,34 @@ Step-by-step analysis:\n\n"""
     prompt += "Now provide a concise summary with technical clarity."
     return prompt
 
-# Main execution
-def main(image_folder):
+
+# ✅ Main processing function
+def process_task(task_id, image_paths):
     results = []
 
-    image_files = sorted([
-        f for f in os.listdir(image_folder)
-        if f.endswith(('.png', '.jpg', '.jpeg'))
-    ])
-
-    for image_file in image_files:
-        path = os.path.join(image_folder, image_file)
-        print(f"Analyzing {image_file}...")
-        result = analyze_image(path)
+    for image_path in image_paths:
+        print(f"Analyzing {image_path}...")
+        result = analyze_image(image_path)
         results.append(result)
 
-    # Save all analysis results to JSON
-    with open("all_image_analyses.json", "w") as f:
-        json.dump(results, f, indent=2)
+    
+    
+    # ✅ Fetch task description
+    task_description = get_task_description_sync(task_id)
+    
 
-    print("\nGenerating summary...\n")
-    summary_prompt = build_summarization_prompt(results)
+    
 
-    # Final summary generation
+    # ✅ Build final prompt
+    summary_prompt = build_summarization_prompt(results, task_description)
+
     summary_response = client.chat.completions.create(
-        model="meta-llama/Llama-3.3-70B-Instruct-Turbo",  # ✅ High-quality model
+        model="meta-llama/Llama-3.3-70B-Instruct-Turbo",
         messages=[
             {
                 "role": "system",
                 "content": (
-                    "You are a helpful and verbose technical analyst. "
+                    "You are a helpful and verbose technical analyst provide brief information about task description"
                     "Answer each question one by one in detail manner, clearly and with structured reasoning like question then answer. "
                     "Include summaries of terminal activity and graphs where applicable. Avoid vague answers."
                 )
@@ -159,15 +187,18 @@ def main(image_folder):
         max_tokens=1024
     )
 
-    # Print + Save the final summary
     final_summary = summary_response.choices[0].message.content.strip()
-    print("===== FINAL SUMMARY =====")
-    print(final_summary)
 
-    with open("final_summary.txt", "w") as f:
-        f.write(final_summary)
+    # Save final summary only
+    summary_json = {
+        "task_id": task_id,
+        "summary": final_summary
+    }
 
-# Entry point
-if __name__ == "__main__":
-    image_dir = "images"  # Change as needed
-    main(image_dir)
+    with open(f"{task_id}_summary.json", "w") as f:
+        json.dump(summary_json, f, indent=2)
+
+    return summary_json
+
+
+
