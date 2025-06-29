@@ -25,8 +25,12 @@
 #     return {"query": query}
 
 
+import base64
+from typing import List
 from fastapi import APIRouter,Query,Body
 from pydantic import BaseModel
+from PIL import Image
+from io import BytesIO
 from app.APIValidation.accept_reject_status import accceptrequest,acceptresponse
 from app.APIValidation.TaskSchema import TaskNotificationResponse
 from app.controller.employee_controller import accept_reject_taskcontroller
@@ -61,14 +65,50 @@ async def acceptresponse(
     return await addconversation(taskid,employeeid,useresponse)
 
 
-#Needassistance route updated bY Nawaz Sayyad Date : 24/6/2025 (uncomment while updtating)
-# @router.post("/needassistance")
-# async def needassistance(
-#     taskid :str=Body(...),
-#     employeeid :str=Body(...),
-#     capturedImagesList :str=Body(...),
-# ):
-#     return await #function to be called here (calling function here resolve this eror ->)
+# Coded By Nawaz Sayyad for Need assistance Date : 29/6/2025 Time : 12:49pm
+@router.post("/needassistance")
+async def needassistance(
+    employeeId: str = Body(...),
+    taskId: str = Body(...),
+    screenshots: List[str] = Body(...)
+):
+    decoded_images = []
+    debug_logs = []
+
+    for index, img_str in enumerate(screenshots):
+        try:
+            debug_logs.append(f"Image {index}: base64 length = {len(img_str)}")
+            
+            image_data = base64.b64decode(img_str)
+            debug_logs.append(f"Image {index}: base64 decoded size = {len(image_data)} bytes")
+
+            image = Image.open(BytesIO(image_data))
+            debug_logs.append(f"Image {index}: format = {image.format}, size = {image.size}, mode = {image.mode}")
+
+            decoded_images.append(image)
+
+            # # Save for debugging // uncomment following 3 lines to save images
+            filename = f"screenshot_{taskId}_{index}.png"
+            image.save(filename)
+            debug_logs.append(f"Image {index}: saved as {filename}")
+
+        except Exception as e:
+            debug_logs.append(f"Image {index}: decoding error: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Error decoding image {index}: {str(e)}",
+                "debug": debug_logs
+            }
+
+
+    # following details may vary , we can send the details of the helper employee ormay be a google meet link where the helper employee can join
+    return {
+        "status": "success",
+        "message": f"{len(decoded_images)} images received and processed.",
+        "taskId": taskId,
+        "employeeId": employeeId,
+        "debug": debug_logs  # ✅ helpful for inspection
+    }
 
 class TaskCompletionRequest(BaseModel):
     completion_status: bool = True
