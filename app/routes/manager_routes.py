@@ -68,15 +68,36 @@ from app.APIValidation.TaskSchema import TaskAssignResponse
 async def assign_task_from_webhook(request: Request):
     try:
         payload = await request.json()
+        extracted = payload.get("call_report", {}).get("extracted_variables", {})
 
-        manager_name = payload.get("manager_name")
-        employee_name = payload.get("employee_name")
-        task_data = payload.get("task")
+        manager_name = extracted.get("manager_name")
+        employee_name = extracted.get("employee_name")
+        description = extracted.get("description")
+        priority = extracted.get("priority", "").upper()
+        requirements_str = extracted.get("requirements", "")
+        dateofassignment = extracted.get("dateofassignment")
+        duration = extracted.get("duration")
 
-        if not (manager_name and employee_name and task_data):
-            raise HTTPException(status_code=400, detail="Missing required fields")
+        # Clean/normalize data
+        if not manager_name or not employee_name or not description:
+            raise HTTPException(status_code=400, detail="Missing required fields in extracted_variables")
 
-        # Find manager and employee by name
+        if priority == "VERY HIGH":
+            priority = "HIGH"
+        elif priority == "NOT PROVIDED":
+            priority = "MEDIUM"
+
+        requirements = [req.strip() for req in requirements_str.split("and") if req.strip()]
+        if not requirements:
+            requirements = ["General"]
+
+        if not dateofassignment or "not provided" in dateofassignment.lower():
+            dateofassignment = datetime.now().strftime("%Y-%m-%d")
+
+        if not duration or "not provided" in duration.lower():
+            duration = "03:00"  # Default to 3 hours
+
+        # Find manager and employee
         manager = await manager_collection.find_one({"name": manager_name})
         if not manager:
             raise HTTPException(status_code=404, detail="Manager not found")
@@ -88,23 +109,17 @@ async def assign_task_from_webhook(request: Request):
         if not employee.get("fcm_token"):
             raise HTTPException(status_code=400, detail=f"Employee {employee_name} has no FCM token registered")
 
-        # Flatten and clean task data
-        if "image_url" in task_data:
-            task_data["image_url"] = str(task_data["image_url"])
-        if "document_url" in task_data:
-            task_data["document_url"] = str(task_data["document_url"])
-        if "priority" in task_data and hasattr(task_data["priority"], "value"):
-            task_data["priority"] = task_data["priority"].value
-        if "dateofassignment" in task_data:
-            task_data["dateofassignment"] = datetime.fromisoformat(task_data["dateofassignment"]).isoformat()
-        if "duration" in task_data:
-            task_data["duration"] = datetime.fromisoformat(task_data["duration"]).isoformat()
-        if "requirements" not in task_data or task_data["requirements"] is None:
-            task_data["requirements"] = []
-
+        # Compose task
         task_document = {
-            **task_data,
             "id": str(uuid4()),
+            "name": f"Task from {manager_name}",
+            "description": description,
+            "priority": priority,
+            "requirements": requirements,
+            "dateofassignment": dateofassignment,
+            "duration": duration,
+            "image_url": "",
+            "document_url": "",
             "manager_id": manager["id"],
             "employee_id": employee["id"],
             "status": False,
