@@ -27,6 +27,7 @@ def domain_extractor(task_details):
         ],
         model="llama3-70b-8192",
     )
+    print("The Extracted domain response by llama model ::::: "+str(chat_completion.choices[0].message.content))
     extracted_domains = ast.literal_eval(chat_completion.choices[0].message.content)
     return extracted_domains
 

@@ -4,12 +4,12 @@ from typing import List, Dict
 from app.APIValidation.EmployeeSchema import ActiveEmployee, InactiveEmployee, ExpertiseRequest
 from app.controller.manager_controller import assigntask
 from app.controller.manager_controller import find_optimal_employees_by_expertise
-
+from app.controller.manager_controller import find_most_optimal_employee
 from app.controller.manager_controller import showallmanagertask
 from app.controller.manager_controller import get_task_details
 from app.models.Employee import Employee
 from app.controller.manager_controller import create_employee
-
+from app.APIValidation.EmployeeSchema import ActiveEmployee, InactiveEmployee, ExpertiseRequest, OptimalEmployeeResponse
 # from app.controller.manager_controller import signup_manager
 # from app.controller.manager_controller import enroll_employee
 router = APIRouter()
@@ -33,16 +33,30 @@ async def assign_task(
 ):
     return await assigntask(task_data, manager_id, employee_id)
 
-@router.post("/optimalexpertise", response_model=Dict[str, List[ActiveEmployee | InactiveEmployee]],
+# @router.post("/optimalexpertise", response_model=Dict[str, List[ActiveEmployee | InactiveEmployee]],
+#     summary="Get employees sorted by optimal expertise",
+#     description="Returns employees grouped by expertise domains with hybrid sorting: "
+#               "1. Inactive high-scorers (≥80) first, "
+#               "2. Active high-scorers (≥80) by availability, "
+#               "3. Inactive low-scorers (<80), "
+#               "4. Active low-scorers (<80) by availability"
+# )
+# async def get_optimal_employees(request: ExpertiseRequest):
+#     return await find_optimal_employees_by_expertise(request.expertise_list)
+
+
+# new tempororray route 
+@router.post(
+    "/optimalexpertise",
+    response_model=OptimalEmployeeResponse,
     summary="Get employees sorted by optimal expertise",
-    description="Returns employees grouped by expertise domains with hybrid sorting: "
-              "1. Inactive high-scorers (≥80) first, "
-              "2. Active high-scorers (≥80) by availability, "
-              "3. Inactive low-scorers (<80), "
-              "4. Active low-scorers (<80) by availability"
+    description="Returns employees grouped by expertise domains with hybrid sorting..."
 )
-async def get_optimal_employees(request: ExpertiseRequest):
-    return await find_optimal_employees_by_expertise(request.expertise_list)
+async def get_optimal_employees(
+    request: ExpertiseRequest,
+    
+):
+    return await find_most_optimal_employee(request.expertise_list)
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def createemployee(
@@ -57,6 +71,8 @@ async def get_tasks(manager_id: str=Query(...)):
 @router.get("/view_task")
 async def viewtaskdetails(taskid : str=Query(...)):
     return get_task_details(taskid)
+
+
 
 # @router.put("/update_task/{task_id}")
 

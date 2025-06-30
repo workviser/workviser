@@ -23,3 +23,6 @@ class ExpertiseResponse(BaseModel):
 
 class ExpertiseRequest(BaseModel):
     expertise_list: List[str]
+    
+class OptimalEmployeeResponse(BaseModel):
+    id: Optional[str]

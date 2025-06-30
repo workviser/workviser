@@ -317,3 +317,70 @@ async def get_task_details(taskid: str):
     }
 
     return task_details
+
+#only return the empid
+async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
+    try:
+        if not expertise_list:
+            return {"id": None}
+
+        # Query all employees who have at least one domain match
+        query = {"$or": [{f"expertise.{domain}": {"$exists": True}} for domain in expertise_list]}
+        employees = await employee_collection.find(query).to_list(length=None)
+
+        THRESHOLD = 80
+        candidate_employees = []
+
+        for emp in employees:
+            is_active = emp.get("task_status", False)
+            avail_status = str(emp.get("availablity_status", "0")).strip()
+
+            # Parse availability
+            if is_active:
+                if avail_status.lower() == "available":
+                    available_time = 0
+                else:
+                    available_time = int(float(avail_status)) if avail_status.replace('.', '', 1).isdigit() else 0
+            else:
+                available_time = 0
+
+            # Check matching domains and get the best expertise score among them
+            matched_scores = [
+                emp["expertise"].get(domain, 0)
+                for domain in expertise_list
+                if domain in emp.get("expertise", {})
+            ]
+            if not matched_scores:
+                continue
+            best_score = max(matched_scores)
+
+            # Assign priority group
+            if best_score >= THRESHOLD:
+                priority = 1 if not is_active else 2
+            else:
+                priority = 3 if not is_active else 4
+
+            candidate_employees.append({
+                "priority": priority,
+                "sort_score": -best_score,
+                "sort_avail": available_time,
+                "id": emp.get("id")
+            })
+
+        if not candidate_employees:
+            return {"id": None}
+
+        # Sort and select top employee
+        candidate_employees.sort(key=lambda x: (
+            x["priority"],
+            x["sort_score"],
+            x["sort_avail"]
+        ))
+
+        best_employee = candidate_employees[0]
+        print("The emp id is "+str(best_employee["id"]))
+        return str(best_employee["id"])
+
+    except Exception as e:
+        print("Error is occureed")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
