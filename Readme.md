@@ -6,7 +6,7 @@ A cross-platform AI-powered Voice Assistant system that enables voice-triggered 
 
 ## 🏗️ Architecture Diagram
 
-![Screenshot](./workviser/Screenshot%202025-06-30%20181622.png)
+![Screenshot](./Screenshot%202025-06-30%20181622.png)
 
 <!-- Replace the above path with your actual diagram image or external link -->
 
