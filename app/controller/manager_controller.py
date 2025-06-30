@@ -209,8 +209,7 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
             x["sort_avail"]
         ))
 
-        best_employee = candidate_employees[0]
-        return {"id": best_employee["id"]}
+        return candidate_employees[0]["id"]
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
