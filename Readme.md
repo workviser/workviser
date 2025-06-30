@@ -25,14 +25,18 @@ WorkViser is designed to optimize remote workflows with a modular architecture:
 
 ## 🧰 Tech Stack
 
-| Component           | Technology/Service                         |
-|---------------------|---------------------------------------------|
-| 🧠 Voice Agent       | **OmniDimension** – Accessible via phone call |
-| 🖥️ Employee App      | **C# .NET** – Windows desktop application    |
-| 🌐 Manager Frontend  | **Next.js** – React, Tailwind CSS            |
-| ⚙️ Backend API       | **FastAPI (Python)**  |
-| 🗃️ Database          | **MongoDB** – Cloud/Local NoSQL datastore    |
-| 🚀 Deployment        | AWS EC2, GitHub Actions            |
+## 🧰 Tech Stack
+
+| Component            | Technology/Service                               |
+|----------------------|---------------------------------------------------|
+| 🧠 Voice Agent        | **OmniDimension** – Accessible via phone call    |
+| 🤖 Language Model     | **LLaMA (Meta AI)** – Locally hosted LLM         |
+| 🖥️ Employee App       | **C# .NET** – Windows desktop application         |
+| 🌐 Manager Frontend   | **Next.js** – React, Tailwind CSS                 |
+| ⚙️ Backend API        | **FastAPI (Python)** |
+| 🗃️ Database           | **MongoDB** – Cloud/Local NoSQL datastore         |
+| 🚀 Deployment         | **AWS EC2**, **GitHub Actions** (CI/CD)          |
+
 
 ---
 
