@@ -25,7 +25,6 @@ WorkViser is designed to optimize remote workflows with a modular architecture:
 
 ## 🧰 Tech Stack
 
-## 🧰 Tech Stack
 
 | Component            | Technology/Service                               |
 |----------------------|---------------------------------------------------|
