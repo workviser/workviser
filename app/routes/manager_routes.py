@@ -46,7 +46,7 @@ async def assign_task(
 
 @router.post(
     "/optimalexpertise",
-    response_model=OptimalEmployeeResponse,
+    response_model=str,
     summary="Get employees sorted by optimal expertise",
     description="Returns employees grouped by expertise domains with hybrid sorting..."
 )
