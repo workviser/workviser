@@ -196,7 +196,7 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
                 "priority": priority,
                 "sort_score": -best_score,
                 "sort_avail": available_time,
-                "id": str(emp["_id"])
+                "id": emp.get("id")
             })
 
         if not candidate_employees:
