@@ -53,6 +53,11 @@ source venv/bin/activate     # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Step 4: Create a .env file with the following environment variables
+GROQ_API_KEY=your-groq-api-key
+DATABASE_NAME=workviser
+HOST=localhost
+PORT=8000
+MONGO_URI=mongodb://localhost:27017
 
 # Step 5: Run the FastAPI server
 uvicorn main:app --reload
