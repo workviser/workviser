@@ -1,6 +1,7 @@
-# 🔊 Voice Agent Platform
+# 🧠 WorkViser: AI-Powered Productivity Platform for Remote Teams
 
-A cross-platform AI-powered Voice Assistant system that enables voice-triggered task automation using FastAPI, .NET, React, and Python.
+WorkViser is a cross-platform AI-powered software tool designed to **enhance the productivity and efficiency** of **remotely working employees and managers**. It uses voice automation, real-time notifications, and smart task orchestration to streamline communication and work management.
+
 
 ---
 
