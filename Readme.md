@@ -42,7 +42,7 @@ To set up and run the FastAPI backend locally:
 
 ```bash
 # Step 1: Clone the repository
-git clone https://github.com/<your-username>/<your-repo-name>.git
+git clone https://github.com/workviser/workviser.git
 cd <your-repo-name>
 
 # Step 2: (Optional) Create a virtual environment
