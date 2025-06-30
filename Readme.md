@@ -13,25 +13,26 @@ WorkViser is a cross-platform AI-powered software tool designed to **enhance the
 
 ---
 
-## 📄 Description
+WorkViser is designed to optimize remote workflows with a modular architecture:
 
-The Voice Agent Platform enables smart, speech-based interaction that integrates AI language models, real-time communication, and modular components. This project is designed to help users:
-
-- Automate tasks using voice commands
-- Receive desktop notifications and perform real-time actions
-- Monitor and control the system via a modern dashboard
+- 🎙️ **Voice Agent (OmniDimension)**: Users can access the AI agent by simply calling a phone number. The voice assistant is hosted and managed via OmniDimension, providing task assistance and conversational support without requiring local setup.
+- ⚙️ **Backend**: FastAPI handles business logic, authentication, and API endpoints.
+- 💼 **Manager Frontend**: A Next.js dashboard for assigning, tracking, and evaluating employee tasks.
+- 🖥️ **Employee Desktop Client**: Built with C# .NET for notifications, check-ins, and voice triggers.
+- 📡 **MongoDB**: NoSQL database for efficient storage of task, user, and interaction data.
 
 ---
 
 ## 🧰 Tech Stack
 
-| Component     | Technology                           |
-|---------------|--------------------------------------|
-| Backend       | FastAPI, Uvicorn, PostgreSQL/MongoDB |
-| Frontend      | React, Vite, Tailwind CSS            |
-| Voice Agent   | Python, SpeechRecognition, OpenAI/Mistral |
-| Desktop Agent | C# .NET Framework / .NET Core        |
-| Deployment    | Docker, GitHub Actions               |
+| Component           | Technology/Service                         |
+|---------------------|---------------------------------------------|
+| 🧠 Voice Agent       | **OmniDimension** – Accessible via phone call |
+| 🖥️ Employee App      | **C# .NET** – Windows desktop application    |
+| 🌐 Manager Frontend  | **Next.js** – React, Tailwind CSS            |
+| ⚙️ Backend API       | **FastAPI (Python)**  |
+| 🗃️ Database          | **MongoDB** – Cloud/Local NoSQL datastore    |
+| 🚀 Deployment        | AWS EC2, GitHub Actions            |
 
 ---
 
