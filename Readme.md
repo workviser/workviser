@@ -38,7 +38,24 @@ WorkViser is designed to optimize remote workflows with a modular architecture:
 
 ## ⚙️ Backend Installation (FastAPI)
 
+To set up and run the FastAPI backend locally:
+
 ```bash
 # Step 1: Clone the repository
 git clone https://github.com/<your-username>/<your-repo-name>.git
-cd <your-repo-name>/server
+cd <your-repo-name>
+
+# Step 2: (Optional) Create a virtual environment
+python3 -m venv venv
+source venv/bin/activate     # On Windows: venv\Scripts\activate
+
+# Step 3: Install dependencies
+pip install -r requirements.txt
+
+# Step 4: Create a .env file with the following environment variables
+
+# Step 5: Run the FastAPI server
+uvicorn main:app --reload
+
+
+
