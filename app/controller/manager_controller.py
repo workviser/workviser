@@ -313,6 +313,7 @@ async def showallmanagertask(manager_id: str):
         enriched_task = {
             "task_id": safe_str(task.get("id")),
             "task_name": safe_str(task.get("name")),
+            "employee_name":safe_str(employee.get("name")),
             "description": safe_str(task.get("description")),
             "priority": safe_str(task.get("priority")),
             "status": safe_str(task.get("status")),
