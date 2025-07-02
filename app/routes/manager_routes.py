@@ -151,3 +151,10 @@ async def get_manager_details(manager_id: str = Query(...)):
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
     return manager
+
+@router.get("/project/details", response_model=Project)
+async def get_project_details(project_id: UUID = Query(..., description="Project UUID")):
+    project = await project_collection.find_one({"id": str(project_id)})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
