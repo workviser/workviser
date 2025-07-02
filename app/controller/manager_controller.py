@@ -1,4 +1,4 @@
-#information: this file contains our controller for manager
+#information: this file contains our business logic for manager related tasks
 from app.models.Manager import Manager
 from app.APIValidation.TaskSchema import TaskCreate,TaskAssignResponse
 from app.models.Employee import Employee
@@ -7,7 +7,6 @@ from app.database import task_collection
 from app.database import manager_collection
 from fastapi import HTTPException,status
 from app.database import project_collection
-# from app.services.firebase_fcm import send_fcm_notification_wrapper
 from app.APIValidation.EmployeeSchema import ActiveEmployee, InactiveEmployee
 from datetime import datetime
 from typing import List
@@ -17,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-#this controller is used to assign task to employee and sends FCM Notification to respective employee
+# This contains our business logic to assign a Task to Employee. This controller is basically used from Nextjs DashBoard
 async def assigntask(task: TaskCreate, manager_id: str, employee_id: str) -> TaskAssignResponse:
     try:
         logger.info(f"Looking for manager with id: {manager_id}")
@@ -61,16 +60,6 @@ async def assigntask(task: TaskCreate, manager_id: str, employee_id: str) -> Tas
 
         task_id = str(result.inserted_id)
 
-        # notification_sent =  send_fcm_notification_wrapper(
-        #     token=employee["fcm_token"],
-        #     task_id=task_id,
-        #     task_name=task_data["name"],
-        #     manager_name=manager.get("name", "Your manager"),
-        # )
-
-        # if not notification_sent:
-        #     logger.error(f"Failed to send notification for task {task_id}")
-
         return TaskAssignResponse(
             message="Task assigned successfully",
             task_id=task_id
@@ -82,12 +71,13 @@ async def assigntask(task: TaskCreate, manager_id: str, employee_id: str) -> Tas
         logger.error(f"Error assigning task: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+
+# It contains the logic to get all all optimal  employees as a list, it returns a list in priority order
 async def find_optimal_employees_by_expertise(expertise_list: List[str]):
     try:
         if not expertise_list:
             return {}
 
-        # Query database
         query = {"$or": [{f"expertise.{domain}": {"$exists": True}} for domain in expertise_list]}
         employees = await employee_collection.find(query).to_list(length=None)
 
@@ -103,17 +93,15 @@ async def find_optimal_employees_by_expertise(expertise_list: List[str]):
                     is_active = emp.get("task_status", False)
                     avail_status = str(emp.get("availablity_status", "0")).strip()
                     
-                    # Parse availability (NEW IMPROVED PARSING)
                     if is_active:
                         if avail_status.lower() == "available":
-                            available_time = 0  # Immediately available
+                            available_time = 0  
                         else:
-                            # Handle numeric strings like "120"
                             available_time = int(float(avail_status)) if avail_status.replace('.','',1).isdigit() else 0
+                            
                     else:
-                        available_time = 0  # Inactive employees always 0
-
-                    # Create employee object
+                        available_time = 0  
+                        
                     employee_data = {
                         "id": str(emp["_id"]),
                         "name": emp["name"],
@@ -124,24 +112,21 @@ async def find_optimal_employees_by_expertise(expertise_list: List[str]):
                         "available_time": available_time
                     }
 
-                    # Assign priority groups (CLEAR LOGIC)
                     if score >= THRESHOLD:
-                        priority = 1 if not is_active else 2  # Inactive high first
+                        priority = 1 if not is_active else 2 
                     else:
-                        priority = 3 if not is_active else 4  # Inactive low before active low
+                        priority = 3 if not is_active else 4 
 
                     domain_employees.append({
                         "priority": priority,
-                        "sort_score": -score,  # Higher scores first
+                        "sort_score": -score,  
                         "sort_avail": available_time,
                         "data": ActiveEmployee(**employee_data) if is_active else InactiveEmployee(**employee_data)
                     })
-
-            # FINAL SORT (GUARANTEED CORRECT)
             domain_employees.sort(key=lambda x: (
-                x["priority"],  # Priority group first
-                x["sort_score"],  # Higher scores next
-                x["sort_avail"]  # Lower availability times first
+                x["priority"],  
+                x["sort_score"],  
+                x["sort_avail"]  
             ))
             
             results[domain] = [emp["data"] for emp in domain_employees]
@@ -151,12 +136,17 @@ async def find_optimal_employees_by_expertise(expertise_list: List[str]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+
+
+# It contains the logic to a single most optimal employee. It is used during needassistance to find most appropriate helper
+# It used Threashold Value of 80 in their expertise score to determine the priority, it just find for the available employee
+# Further enhacement : - Dynamic Priority Based on Time left to be free
 async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
     try:
         if not expertise_list:
             return {"id": None}
 
-        # Query all employees who have at least one domain match
+        
         query = {"$or": [{f"expertise.{domain}": {"$exists": True}} for domain in expertise_list]}
         employees = await employee_collection.find(query).to_list(length=None)
 
@@ -167,7 +157,7 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
             is_active = emp.get("task_status", False)
             avail_status = str(emp.get("availablity_status", "0")).strip()
 
-            # Parse availability
+           
             if is_active:
                 if avail_status.lower() == "available":
                     available_time = 0
@@ -176,7 +166,7 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
             else:
                 available_time = 0
 
-            # Check matching domains and get the best expertise score among them
+            
             matched_scores = [
                 emp["expertise"].get(domain, 0)
                 for domain in expertise_list
@@ -185,8 +175,7 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
             if not matched_scores:
                 continue
             best_score = max(matched_scores)
-
-            # Assign priority group
+            
             if best_score >= THRESHOLD:
                 priority = 1 if not is_active else 2
             else:
@@ -202,35 +191,19 @@ async def find_most_optimal_employee(expertise_list: List[str]) -> dict:
         if not candidate_employees:
             return {"id": None}
 
-        # Sort and select top employee
         candidate_employees.sort(key=lambda x: (
             x["priority"],
             x["sort_score"],
             x["sort_avail"]
         ))
-
         return candidate_employees[0]["id"]
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-def get_tasks(manager_id: str):
-    try:
-        manager =  manager_collection.find_one({"id": manager_id})
-        if manager is None:
-            raise HTTPException(status_code=404, detail="Manager not found")
 
-        tasks = task_collection.find({"manager_id": manager_id})
 
-        return {"message": "Tasks retrieved successfully", "tasks": [task.model_dump() for task in tasks]}  
-    
-    except HTTPException as http_exc:
-        raise http_exc
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-    
 
+# this controller is used for signing up of new manager, this controller requires all manager details as mentioned in Folder APIValidation
 def signup_manager(manager: Manager):
     try:
         manager_data = manager.model_dump()
@@ -249,6 +222,7 @@ def signup_manager(manager: Manager):
     
 
 
+# employee enrollement logic
 def enroll_employee(employee:Employee):
     try:
         employee_data = employee.model_dump()
@@ -266,13 +240,13 @@ def enroll_employee(employee:Employee):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
-
+# password hash creation
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
-
+# this controller is used to create an employee
 async def create_employee(employee: Employee):
     existing = await employee_collection.find_one({
         "$or": [{"work_email": employee.work_email}, {"id": employee.id}]
@@ -283,11 +257,9 @@ async def create_employee(employee: Employee):
             detail="Employee with this ID or work email already exists."
         )
 
-    # Hash the password before storing
     employee_dict = employee.model_dump()
     employee_dict["password"] = hash_password(employee.password.get_secret_value())
 
-    # Set created_at and id if not already set
     employee_dict["created_at"] = datetime.utcnow()
     employee_dict["id"] = employee_dict.get("id", str(uuid4()))
 
@@ -295,6 +267,10 @@ async def create_employee(employee: Employee):
     return {"message": "Employee registered successfully", "employee_id": employee_dict["id"]}
 
 
+
+
+
+#this is helper for below controller
 def safe_str(value):
     if isinstance(value, bytes):
         try:
@@ -303,6 +279,7 @@ def safe_str(value):
             return "<binary>"
     return value
 
+#this controller contains to logic to find out tasks given by a particular manager.
 async def showallmanagertask(manager_id: str):
     print(manager_id)
 
@@ -355,25 +332,24 @@ async def showallmanagertask(manager_id: str):
     return enriched_tasks
 
 
+
+
+#this controller to used to fetch the compete data regarding task, it is used by manager to get to know complete details of  any task assigned by him/her
 async def get_task_details(taskid: str):
-    # Fetch the task
+    
     task = await task_collection.find_one({"id": taskid})
     if not task:
         raise HTTPException(status_code=404, detail="Task not found.")
 
-    # Get employee name
     employee = await employee_collection.find_one({"id": task["employee_id"]})
     employee_name = employee["name"] if employee else "Unknown"
 
-    # Get manager name
     manager = await manager_collection.find_one({"id": task["manager_id"]})
     manager_name = manager["name"] if manager else "Unknown"
 
-    # Get project name
     project = await project_collection.find_one({"id": task["project_id"]})
     project_name = project["name"] if project else "Unknown"
 
-    # Combine data
     task_details = {
         "task_id": task["id"],
         "task_name": task["name"],
