@@ -9,22 +9,15 @@ from app.controller.manager_controller import showallmanagertask
 from app.controller.manager_controller import get_task_details
 from app.models.Employee import Employee
 from app.controller.manager_controller import create_employee
+from uuid import uuid4
+from datetime import datetime
+from app.database import manager_collection, employee_collection, task_collection
+from app.APIValidation.TaskSchema import TaskAssignResponse
 
-# from app.controller.manager_controller import signup_manager
-# from app.controller.manager_controller import enroll_employee
+
 router = APIRouter()
 
-# @router.post("/login",)
-
-# @router.post("/register",)
-# def register_manager(manager: Manager):
-#    return signup_manager(manager)
-
-# @router.post("/enroll_employee")
-# def enroll_employee(employee: Employee):
-#    return enroll_employee(employee)
-
-# In your route:
+# This route is used at manager end to assign a particular task, required API Input Data and Response is Present in APIValidation Folder
 @router.post("/assign_task", status_code=201, response_model=TaskAssignResponse)
 async def assign_task(
     task_data: TaskCreate=Body(...),
@@ -44,11 +37,10 @@ async def assign_task(
 # async def get_optimal_employees(request: ExpertiseRequest):
 #     return await find_optimal_employees_by_expertise(request.expertise_list)
 
+# This Route is used to get the optimal employee as a helper. It returns single most optimal employee
 @router.post(
     "/optimalexpertise",
     response_model=str,
-    summary="Get employees sorted by optimal expertise",
-    description="Returns employees grouped by expertise domains with hybrid sorting..."
 )
 async def get_optimal_employees(
     request: ExpertiseRequest,
@@ -56,26 +48,26 @@ async def get_optimal_employees(
 ):
     return await find_most_optimal_employee(request.expertise_list)
 
+
+# This route is used to register employee i.e. to create a new employee
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def createemployee(
     employee:Employee=Body(...)
 ):return await create_employee(employee) 
 
 
+# This route is used to get all tasks assigned by manager 
 @router.get("/get_tasks")
 async def get_tasks(manager_id: str=Query(...)):
    return await showallmanagertask(manager_id)
 
+
+# This route provides details of particular task
 @router.get("/view_task")
 async def viewtaskdetails(taskid : str=Query(...)):
-    return get_task_details(taskid)
+    return await get_task_details(taskid)
 
-from uuid import uuid4
-from datetime import datetime
-from app.database import manager_collection, employee_collection, task_collection
-from app.APIValidation.TaskSchema import TaskAssignResponse
-
-
+# This route is used as a webhook to get event from OmniDimension Voice Agent. It pushes complete  post call logs at this endpoint. 
 @router.post("/webhook/assign-task", response_model=TaskAssignResponse)
 async def assign_task_from_webhook(request: Request):
     try:
@@ -90,7 +82,7 @@ async def assign_task_from_webhook(request: Request):
         dateofassignment = extracted.get("dateofassignment")
         duration = extracted.get("duration")
 
-        # Clean/normalize data
+        
         if not manager_name or not employee_name or not description:
             raise HTTPException(status_code=400, detail="Missing required fields in extracted_variables")
 
@@ -107,9 +99,8 @@ async def assign_task_from_webhook(request: Request):
             dateofassignment = datetime.now().strftime("%Y-%m-%d")
 
         if not duration or "not provided" in duration.lower():
-            duration = "03:00"  # Default to 3 hours
+            duration = "03:00:00"  
 
-        # Find manager and employee
         manager = await manager_collection.find_one({"name": manager_name})
         if not manager:
             raise HTTPException(status_code=404, detail="Manager not found")
@@ -121,7 +112,6 @@ async def assign_task_from_webhook(request: Request):
         if not employee.get("fcm_token"):
             raise HTTPException(status_code=400, detail=f"Employee {employee_name} has no FCM token registered")
 
-        # Compose task
         task_document = {
             "id": str(uuid4()),
             "name": f"Task from {manager_name}",
@@ -153,23 +143,3 @@ async def assign_task_from_webhook(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-
-@router.post("/webhook/assigntask")
-async def assign_task_from_webhook(request: Request):
-    try:
-        payload = await request.json()
-        print("Payload:", payload)
-        return {"status": "OK"}
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}
-# @router.put("/update_task/{task_id}")
-
-# @router.delete("/delete_task/{task_id}")
-
-# @router.get("/free_employee")
-
-# @router.get("/task_status/{task_id}")
-
-# @router.get("/get_project_status")
