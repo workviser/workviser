@@ -7,6 +7,7 @@ from app.controller.manager_controller import find_optimal_employees_by_expertis
 from app.controller.manager_controller import find_most_optimal_employee
 from app.controller.manager_controller import showallmanagertask
 from app.controller.manager_controller import get_task_details
+from app.models.Manager import Manager
 from app.models.Employee import Employee
 from app.controller.manager_controller import create_employee
 from uuid import uuid4
@@ -143,3 +144,12 @@ async def assign_task_from_webhook(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+
+@router.get("/details/{manager_id}", response_model=Manager)
+async def get_manager_details(manager_id: str):
+    manager = await manager_collection.find_one({"id": manager_id})
+    
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+    
+    return manager
