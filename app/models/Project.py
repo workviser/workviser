@@ -1,24 +1,29 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import List, Optional
-from uuid import uuid4
+from uuid import UUID
 
 class Project(BaseModel):
-#project
-  id: uuid4 = uuid4()
-  name: str
-  description: str
-  dateofassignement: datetime
-  duration: str
-  image_url : Optional[str]=None
-  document_url: Optional[str]=None
-  status:bool
-  created_at: datetime
+    id: UUID
+    name: str
+    description: str
+    dateofassignement: datetime
+    duration: str
+    image_url: Optional[str] = None
+    document_url: Optional[str] = None
+    status: bool
+    created_at: datetime
 
-  #employee assigned
-  employee_ids: list[str]
-  manager_ids: list[str]
+    employee_ids: List[str]
+    manager_ids: List[str]
 
-  #client infrormation
-  client_name: str
-  client_email: str
+    client_name: str
+    client_email: EmailStr
+
+    class Config:
+        from_attributes = True
+        arbitrary_types_allowed = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat(),
+            UUID: lambda v: str(v),
+        }
