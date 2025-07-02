@@ -295,44 +295,62 @@ async def create_employee(employee: Employee):
     return {"message": "Employee registered successfully", "employee_id": employee_dict["id"]}
 
 
-async def showallmanagertask(manager_id:str):
+def safe_str(value):
+    if isinstance(value, bytes):
+        try:
+            return value.decode("utf-8", errors="replace")
+        except:
+            return "<binary>"
+    return value
+
+async def showallmanagertask(manager_id: str):
+    print(manager_id)
+
     tasks_cursor = task_collection.find({"manager_id": manager_id})
     tasks = await tasks_cursor.to_list(length=100)
 
     if not tasks:
         raise HTTPException(status_code=404, detail="No tasks found for this manager.")
 
-    enriched_tasks = []
-    for task in tasks:
-        # Fetch employee name
-        employee = await employee_collection.find_one({"id": task["employee_id"]})
-        employee_name = employee["name"] if employee else "Unknown"
+    
+    manager = await manager_collection.find_one({"id": manager_id})
+    manager_name = manager["name"] if manager else "Unknown"
 
-        # Fetch project name
-        project = await project_collection.find_one({"id": task["project_id"]})
+    enriched_tasks = []
+
+    for task in tasks:
+        
+        employee_id = task.get("employee_id")
+        project_id = task.get("project_id")
+
+        if not employee_id or not project_id:
+            continue
+
+        employee = await employee_collection.find_one({"id": employee_id})
+        project = await project_collection.find_one({"id": project_id})
+
+        employee_name = employee["name"] if employee else "Unknown"
         project_name = project["name"] if project else "Unknown"
 
-        # Optionally fetch manager name (can be same for all)
-        manager = await manager_collection.find_one({"id": manager_id})
-        manager_name = manager["name"] if manager else "Unknown"
-
-        # Enrich task data
+        
         enriched_task = {
-            "task_id": task["id"],
-            "task_name": task["name"],
-            "description": task["description"],
-            "priority": task["priority"],
-            "task_status": task["task_status"],
-            "descriptive_task_status":task["descriptive_task_status"],
+            "task_id": safe_str(task.get("id")),
+            "task_name": safe_str(task.get("name")),
+            "description": safe_str(task.get("description")),
+            "priority": safe_str(task.get("priority")),
+            "status": safe_str(task.get("status")),
             "accepted": task.get("Accepted_status", False),
-            "reject_reason": task.get("reject_reason"),
-            "employee_name": employee_name,
-            "manager_name": manager_name,
-            "project_name": project_name,
-            "created_at": task["created_at"]
+            "reject_reason": safe_str(task.get("reject_reason")),
+            "employee_name": safe_str(employee_name),
+            "manager_name": safe_str(manager_name),
+            "project_name": safe_str(project_name),
+            "created_at": safe_str(task.get("created_at"))
         }
 
-        enriched_tasks.append(enriched_task)
+        try:
+            enriched_tasks.append(enriched_task)
+        except Exception as e:
+            raise e
 
     return enriched_tasks
 
