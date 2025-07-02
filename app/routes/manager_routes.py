@@ -14,7 +14,7 @@ from uuid import uuid4
 from datetime import datetime
 from app.database import manager_collection, employee_collection, task_collection
 from app.APIValidation.TaskSchema import TaskAssignResponse
-
+from app.models.Project import Project
 
 router = APIRouter()
 
