@@ -37,7 +37,7 @@ class Task(BaseModel):
     
     accepted_status: bool = False
     reject_reason:Optional[str]
-    domain:list[str]
+    domain:Optional[list[str]]=None
 
     created_at: datetime = Field(default_factory=datetime.now)
     class Config:
