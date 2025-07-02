@@ -356,7 +356,7 @@ async def get_task_details(taskid: str):
         "description": task["description"],
         "priority": task["priority"],
         "task_status": task["status"],
-        "descriptive_task_status":task["descriptive_task_status"],
+        "descriptive_task_status":"In Progress",
         "accepted": task.get("Accepted_status", False),
         "reject_reason": task.get("reject_reason"),
         "duration": str(task["duration"]),
