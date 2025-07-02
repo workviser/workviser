@@ -73,7 +73,8 @@ class TaskCreate(TaskBase):
         example="proj_12345",
         description="ID of the project this task belongs to",
         pattern=r'^[a-zA-Z0-9_]+$'
-    )
+    ),
+    domain:list[str]
 
 
     class Config:
