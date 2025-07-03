@@ -91,9 +91,9 @@ async def needassistance(
             decoded_images.append(image)
 
             # # Save for debugging // uncomment following 3 lines to save images
-            # filename = f"screenshot_{taskId}_{index}.png"
-            # image.save(filename)
-            # debug_logs.append(f"Image {index}: saved as {filename}")
+            filename = f"screenshot_{taskId}_{index}.png"
+            image.save(filename)
+            debug_logs.append(f"Image {index}: saved as {filename}")
             
         except Exception as e:
             debug_logs.append(f"Image {index}: decoding error: {str(e)}")

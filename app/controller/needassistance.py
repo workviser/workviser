@@ -22,7 +22,7 @@ async def starting_grant_assistant_employee(taskid:str ,employeeid:str,decoded_i
     print("Type of the data recived is "+str(type(extracted_domains_for_helper_emp)))
     print("The Extracted Domains for the Employee is "+str(extracted_domains_for_helper_emp))
     best_helper_employees_list = await find_most_optimal_employee(extracted_domains_for_helper_emp)
-    # print("The best helper employees are "+str(best_helper_employees_list))
+    print("The best helper employees are "+str(best_helper_employees_list))
     
     taskdata = await task_collection.find_one({"id": taskid})
     print("The Helping Employee is"+str(taskdata))
