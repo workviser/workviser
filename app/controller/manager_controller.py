@@ -103,7 +103,7 @@ async def find_optimal_employees_by_expertise(expertise_list: List[str]):
                         available_time = 0  
                         
                     employee_data = {
-                        "id": str(emp["_id"]),
+                        "id": str(emp["id"]),
                         "name": emp["name"],
                         "work_email": emp["work_email"],
                         "score": score,
