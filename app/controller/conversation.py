@@ -1,4 +1,4 @@
-from app.database import conversation_collection,task_collection
+from app.database import conversation_collection,task_collection,employee_collection
 from app.models.Conversation import EmployeeStatus
 from datetime import datetime,timezone
 from app.models.Conversation import TaskConversationEntry
@@ -44,7 +44,14 @@ async def addconversation(taskid: str,employeeid:str, response: str):
     updated_status = mental_status_analyzer(convo_history=history, taskdetails=task_details)
     
     new_entry.mental_status = updated_status
-    history[-1]["mental_status"] = updated_status  
+    history[-1]["mental_status"] = updated_status 
+     # changed by manya
+    await employee_collection.update_one(
+    {"id": employeeid},
+    {"$set": {"mental_status": updated_status}}
+)  
+    # uptothis   
+
     print(f""" Conversation.py  \n The Complelete Conversation History After Processing is \n :
           {history}
           """)
