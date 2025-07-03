@@ -28,16 +28,16 @@ async def assign_task(
 ):
     return await assigntask(task_data, manager_id, employee_id)
 
-# @router.post("/optimalexpertise", response_model=Dict[str, List[ActiveEmployee | InactiveEmployee]],
-#     summary="Get employees sorted by optimal expertise",
-#     description="Returns employees grouped by expertise domains with hybrid sorting: "
-#               "1. Inactive high-scorers (≥80) first, "
-#               "2. Active high-scorers (≥80) by availability, "
-#               "3. Inactive low-scorers (<80), "
-#               "4. Active low-scorers (<80) by availability"
-# )
-# async def get_optimal_employees(request: ExpertiseRequest):
-#     return await find_optimal_employees_by_expertise(request.expertise_list)
+@router.post("/available", response_model=Dict[str, List[ActiveEmployee | InactiveEmployee]],
+    summary="Get employees sorted by optimal expertise",
+    description="Returns employees grouped by expertise domains with hybrid sorting: "
+              "1. Inactive high-scorers (≥80) first, "
+              "2. Active high-scorers (≥80) by availability, "
+              "3. Inactive low-scorers (<80), "
+              "4. Active low-scorers (<80) by availability"
+)
+async def get_optimal_employees(request: ExpertiseRequest):
+    return await find_optimal_employees_by_expertise(request.expertise_list)
 
 # This Route is used to get the optimal employee as a helper. It returns single most optimal employee
 @router.post(
