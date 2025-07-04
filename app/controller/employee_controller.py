@@ -79,7 +79,7 @@ async def accept_reject_taskcontroller(data: accceptrequest, taskid: str):
         if not employee:
             return {"error": "Employee not found"}
         minutes=convert_duration_to_minutes(task["duration"])
-        # changed by manya
+                # changed by manya
         await employee_collection.update_one(
         {"id": data.employeeid},
         {"$set": {
@@ -89,7 +89,7 @@ async def accept_reject_taskcontroller(data: accceptrequest, taskid: str):
     )
         # upto this
         # employee["availablity_status"]=str(minutes)
-
+        
         conversation = await conversation_collection.find_one({"task_id": taskid})
         if conversation:
             await conversation_collection.delete_one({"task_id": taskid})
