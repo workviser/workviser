@@ -14,7 +14,7 @@ client = Together(api_key=os.getenv("TOGETHER_API_KEY"))
 DATABASE_NAME = os.getenv("DATABASE_NAME", "workviser")
 
 # MongoDB
-mongo_client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+mongo_client = AsyncIOMotorClient("mongodb+srv://workviseraws:0NXOubYehEVjby4x@cluster0.oi0xh0i.mongodb.net/")
 db = mongo_client[DATABASE_NAME]
 task_collection = db["Task"]
 
