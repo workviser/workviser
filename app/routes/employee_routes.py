@@ -33,11 +33,10 @@ from PIL import Image
 from io import BytesIO
 from app.APIValidation.accept_reject_status import accceptrequest,acceptresponse
 from app.APIValidation.TaskSchema import TaskNotificationResponse
-from app.controller.employee_controller import accept_reject_taskcontroller
+from app.controller.employee_controller import accept_reject_taskcontroller, get_employee_expertise
 from app.controller.employee_controller import complete_task
 from app.controller.conversation import addconversation
 from app.controller.employee_controller import get_task_notification
-from app.controller.employee_controller import get_employee_expertise
 from app.controller.needassistance import starting_grant_assistant_employee
 router = APIRouter()
 
@@ -134,6 +133,7 @@ async def end_task(
         completion_status=request.completion_status,
         notes=request.notes
     )
+    
 @router.get("/expertise")
 async def get_employee_expertise_route(
     employee_id: str = Query(...)
