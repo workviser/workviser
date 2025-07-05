@@ -134,8 +134,6 @@ async def get_task_description(task_id):
 
 
 
-    
-
 
 # Build summarization prompt from all per-image outputs and task description
 def build_summarization_prompt(image_analyses, task_description):

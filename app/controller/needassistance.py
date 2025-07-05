@@ -3,6 +3,7 @@ from app.wwapicall.domain_extractor import domain_extractor
 from app.controller.manager_controller import find_most_optimal_employee
 from app.controller.manager_controller import assigntask
 from app.database import task_collection
+from app.mailer.helperemail import send_workviser_task_email
 async def starting_grant_assistant_employee(taskid:str ,employeeid:str,decoded_images:list ):
     """
     1.In this function we will be calling the vision analysis model by passing the employeeid and taskid to and the list of the decoded images i.e screenshots.
@@ -26,5 +27,7 @@ async def starting_grant_assistant_employee(taskid:str ,employeeid:str,decoded_i
     
     taskdata = await task_collection.find_one({"id": taskid})
     print("The Helping Employee is"+str(taskdata))
-    # assigntask()
+    send_workviser_task_email("shrutilap01@gmail.com","Helper",str(taskdata),task_summary=extracted_json,decoded_images=decoded_images,task_id=taskid)
+    
+    assigntask()
     return best_helper_employees_list
