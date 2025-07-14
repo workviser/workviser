@@ -1,5 +1,6 @@
 from fastapi import APIRouter,Body,Query,status,Request,HTTPException
 from app.APIValidation.TaskSchema import TaskCreate,TaskAssignResponse
+from pydantic import ValidationError
 from typing import List, Dict
 from app.APIValidation.EmployeeSchema import ActiveEmployee, InactiveEmployee, ExpertiseRequest, OptimalEmployeeResponse
 from app.controller.manager_controller import assigntask
