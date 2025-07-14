@@ -193,22 +193,27 @@ async def get_all_employees():
         raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
 
-@router.get("/expertise")
-async def get_employee_expertise_route(
-    employee_id: str = Query(...)
-):
+@router.get("/expertise", response_model=Dict[str, int])
+async def get_employee_expertise_route(employee_id: str = Query(..., description="Employee ID (e.g., EMP48721)")):
     return await get_employee_expertise(employee_id)
 
-async def get_employee_expertise(employee_id: str):
-    # Find the employee document by ID
-    employee = await employee_collection.find_one({"id": employee_id})
 
-    if not employee:
+async def get_employee_expertise(employee_id: str) -> Dict[str, int]:
+    try:
+        raw_employees = await employee_collection.find().to_list(length=1000)
+
+        for emp in raw_employees:
+            try:
+                validated_emp = Employee(**emp)
+                if validated_emp.id == employee_id:
+                    if validated_emp.expertise:
+                        return validated_emp.expertise
+                    else:
+                        raise HTTPException(status_code=404, detail="Expertise not found for this employee")
+            except ValidationError as e:
+                print(f"Skipping invalid employee: {e}")
+
         raise HTTPException(status_code=404, detail="Employee not found")
 
-    # Get the expertise field
-    expertise = employee.get("expertise")
-    if not expertise:
-        raise HTTPException(status_code=404, detail="Expertise data not found")
-
-    return {"expertise": expertise}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
