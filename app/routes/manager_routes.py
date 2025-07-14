@@ -190,3 +190,10 @@ async def get_all_employees():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
+
+
+@router.get("/expertise")
+async def get_employee_expertise_route(
+    employee_id: str = Query(...)
+):
+    return await get_employee_expertise(employee_id)
