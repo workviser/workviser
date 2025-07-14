@@ -164,3 +164,29 @@ async def get_project_details(project_id: str = Query(...)):
     if "_id" in project:
         project["_id"] = str(project["_id"])  
     return project
+
+
+
+@router.get("/all", response_model=List[Employee])
+async def get_all_employees_route():
+    return await get_all_employees()
+
+
+
+async def get_all_employees():
+    try:
+        raw_employees = await employee_collection.find().to_list(length=1000)
+
+        valid_employees = []
+        for emp in raw_employees:
+            try:
+                validated_emp = Employee(**emp)
+                valid_employees.append(validated_emp)
+            except ValidationError as e:
+                # Log it if needed, or just skip it
+                print(f"Skipping invalid employee document: {e}")
+
+        return valid_employees
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
