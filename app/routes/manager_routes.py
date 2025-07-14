@@ -197,3 +197,17 @@ async def get_employee_expertise_route(
     employee_id: str = Query(...)
 ):
     return await get_employee_expertise(employee_id)
+
+async def get_employee_expertise(employee_id: str):
+    # Find the employee document by ID
+    employee = await employee_collection.find_one({"id": employee_id})
+
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    # Get the expertise field
+    expertise = employee.get("expertise")
+    if not expertise:
+        raise HTTPException(status_code=404, detail="Expertise data not found")
+
+    return {"expertise": expertise}
